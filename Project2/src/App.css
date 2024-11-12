@@ -79,14 +79,30 @@
   color: red;
 }
 
-/* Grid and cell styling */
+/* Center the grid and constrain it within the content wrapper */
 .grid {
   display: grid;
   gap: 2px;
-  margin: 20px auto;
-  max-width: 90vw; /* Responsive width for smaller screens */
+  margin: 0 auto; /* Center the grid */
+  max-width: 100%; /* Limit the grid to the container's width */
+  grid-template-columns: repeat(auto-fill, minmax(30px, 1fr)); /* Responsive columns */
+  justify-content: center;
 }
 
+/* Update the content-wrapper to control overall layout */
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 800px;
+  width: 100%;
+  padding: 20px;
+  margin: 0 auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  background-color: #ffffff;
+  border-radius: 8px;
+}
 .cell {
   width: 30px;
   height: 30px;

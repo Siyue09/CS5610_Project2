@@ -7,20 +7,17 @@ const generateGrid = (size, mines, safeCell = null) => {
     Array(size).fill({ isMine: false, isRevealed: false, adjacentMines: 0, isFlagged: false })
   );
 
-  // Place mines randomly, ensuring the first clicked cell (safeCell) is not a bomb
   let minesPlaced = 0;
   while (minesPlaced < mines) {
     const row = Math.floor(Math.random() * size);
     const col = Math.floor(Math.random() * size);
 
-    // Avoid placing a mine at the first-clicked cell
     if ((!safeCell || (row !== safeCell.row || col !== safeCell.col)) && !grid[row][col].isMine) {
       grid[row][col] = { ...grid[row][col], isMine: true };
       minesPlaced++;
     }
   }
 
-  // Calculate adjacent mines for each cell
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size; c++) {
       if (!grid[r][c].isMine) {
@@ -41,18 +38,25 @@ const generateGrid = (size, mines, safeCell = null) => {
 };
 
 export const GameProvider = ({ children }) => {
-  const [difficulty, setDifficulty] = useState('easy');
-  const [size, setSize] = useState(8);
-  const [mines, setMines] = useState(10);
-  const [grid, setGrid] = useState(generateGrid(size, mines));
-  const [gameOver, setGameOver] = useState(false);
-  const [message, setMessage] = useState("");
-  const [firstClick, setFirstClick] = useState(true);
-  const [flagsLeft, setFlagsLeft] = useState(mines);
+  const savedGame = JSON.parse(localStorage.getItem("gameState")) || {};
+
+  const [difficulty, setDifficulty] = useState(savedGame.difficulty || 'easy');
+  const [size, setSize] = useState(savedGame.size || 8);
+  const [mines, setMines] = useState(savedGame.mines || 10);
+  const [grid, setGrid] = useState(savedGame.grid || generateGrid(size, mines));
+  const [gameOver, setGameOver] = useState(savedGame.gameOver || false);
+  const [message, setMessage] = useState(savedGame.message || "");
+  const [firstClick, setFirstClick] = useState(savedGame.firstClick || true);
+  const [flagsLeft, setFlagsLeft] = useState(savedGame.flagsLeft || mines);
 
   useEffect(() => {
     resetGame();
   }, [difficulty]);
+
+  useEffect(() => {
+    const gameState = { difficulty, size, mines, grid, gameOver, message, firstClick, flagsLeft };
+    localStorage.setItem("gameState", JSON.stringify(gameState));
+  }, [difficulty, size, mines, grid, gameOver, message, firstClick, flagsLeft]);
 
   const resetGame = () => {
     const config = {
@@ -100,7 +104,6 @@ export const GameProvider = ({ children }) => {
       setGameOver(true);
       setMessage("Game over! You lost!");
     } else if (newGrid[row][col].adjacentMines === 0) {
-      // If the cell has no adjacent mines, clear surrounding cells
       autoClear(newGrid, row, col);
     } else if (checkWin(newGrid)) {
       setGameOver(true);
@@ -116,11 +119,9 @@ export const GameProvider = ({ children }) => {
         const newRow = row + i;
         const newCol = col + j;
 
-        // Check boundaries and if the cell is already revealed
         if (newRow >= 0 && newRow < size && newCol >= 0 && newCol < size && !grid[newRow][newCol].isRevealed) {
           grid[newRow][newCol].isRevealed = true;
 
-          // If adjacent cell has 0 mines around it, recurse
           if (grid[newRow][newCol].adjacentMines === 0) {
             autoClear(grid, newRow, newCol);
           }
